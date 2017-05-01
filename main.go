@@ -13,7 +13,6 @@ var Latest *Block = &Genesis
 // Block Structure
 type Block struct {
 	id          int
-	next        *Block
 	prev        *Block
 	data        string
 	nonce       int
@@ -27,14 +26,13 @@ func Insert(data string) int {
 
 	newBlock := Block{id: Latest.id + 1, prev: Latest, data: data,
 		prevHash: &Latest.currentHash, timeStamp: time.Now()}
-
-	Latest.next = &newBlock
 	Latest = &newBlock
 	return Latest.id
 }
 
-//Compute hash for a block
-func ComputeHash(block *Block)
+// POW algorithm -  Returns the nonce and computed hash.
+func (block *Block) ComputeHash() (int, string) {
+	data := fmt.Sprintf("%s%s", block.data, *block.prevHash)
 	var z []byte
 	for i := 0; ; i++ {
 		s := fmt.Sprintf("%s%d", data, i)
@@ -42,11 +40,14 @@ func ComputeHash(block *Block)
 		h.Write([]byte(s))
 		z = h.Sum(nil)
 		if (z[0] == 00) && (z[1] == 00) {
-			fmt.Printf("%x\n", z)
-			fmt.Println(s)
-			break
+			t := fmt.Sprintf("%x", z)
+			block.currentHash = t
+			block.nonce = i
+			return i, t
 		}
 	}
+}
+
 func main() {
 	fmt.Println(time.Now())
 	fmt.Println(Latest)
